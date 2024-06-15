@@ -5,6 +5,7 @@ pub mod components;
 pub mod plugins;
 pub mod systems;
 
+use components::*;
 use systems::*;
 
 fn main() {
