@@ -25,6 +25,7 @@ fn main() {
         )
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(FixedUpdate, smovement)
+        .add_systems(Startup, setup_map)
         .add_systems(Startup, setup)
         .run()
 }
