@@ -3,13 +3,13 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct CTile_map {
-    dimensions: UVec2,
+    dimensions: IVec2,
 }
 
 impl CTile_map {
-    pub fn new(x: u32, y: u32) -> Self {
+    pub fn new(x: i32, y: i32) -> Self {
         Self {
-            dimensions: UVec2::new(x, y),
+            dimensions: IVec2::new(x, y),
         }
     }
 }

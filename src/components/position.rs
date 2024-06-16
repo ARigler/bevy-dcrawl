@@ -2,13 +2,13 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct CPosition {
-    coords: UVec2,
+    pub coords: IVec2,
 }
 
 impl CPosition {
-    pub fn new(x: u32, y: u32) -> Self {
+    pub fn new(x: i32, y: i32) -> Self {
         Self {
-            coords: UVec2::new(x, y),
+            coords: IVec2::new(x, y),
         }
     }
 }

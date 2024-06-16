@@ -7,7 +7,7 @@ pub enum TileType {
 
 #[derive(Component)]
 pub struct CTile {
-    tile_type: TileType,
+    pub tile_type: TileType,
 }
 
 impl CTile {
