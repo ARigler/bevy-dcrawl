@@ -1,4 +1,5 @@
 use crate::*;
+use bevy::ecs::component::*;
 use bevy::prelude::*;
 use bevy::utils::*;
 use rand::prelude::*;
@@ -6,12 +7,6 @@ use rand::prelude::*;
 const TILE_SIZE: Vec2 = Vec2::new(32.0, 32.0);
 const MAP_X: i32 = 80;
 const MAP_Y: i32 = 50;
-
-#[derive(Resource)]
-pub struct MapTiles {
-    floor_handle: Handle<Image>,
-    wall_handle: Handle<Image>,
-}
 
 pub fn normalise_coordinates(x: i32, y: i32) -> (f32, f32) {
     return (x as f32 * TILE_SIZE.x, y as f32 * TILE_SIZE.y);
@@ -54,21 +49,19 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .id();
 }
 
-pub fn setup_map(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut map_tiles: ResMut<MapTiles>,
-) {
+pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
     let map_x = 80;
     let map_y = 50;
 
-    map_tiles.floor_handle = asset_server.load("textures/floor_1.png");
-    map_tiles.wall_handle = asset_server.load("textures/wall_mid.png");
+    let wall_handle: Handle<Image> = asset_server.load("textures/wall_mid.png");
     //spawn map
     let map = commands
         .spawn((
             CTile_map::new(map_x, map_y),
             TransformBundle {
+                ..Default::default()
+            },
+            VisibilityBundle {
                 ..Default::default()
             },
         ))
@@ -89,7 +82,7 @@ pub fn setup_map(
                             translation: Vec3::new(normal_coords.0, normal_coords.1, 0.0),
                             ..default()
                         },
-                        texture: map_tiles.wall_handle.clone(),
+                        texture: wall_handle.clone(),
                         ..default()
                     },
                 ))
@@ -100,13 +93,12 @@ pub fn setup_map(
 }
 
 pub fn generate_rooms(
-    tile_map: &mut Query<(&CPosition, &mut CTile), Without<CPlayer>>,
+    mut tile_map: Query<(&CPosition, &mut CTile, &mut Handle<Image>), Without<CPlayer>>,
     asset_server: Res<AssetServer>,
-    mut assets: ResMut<Assets<Image>>,
-    map_tiles: Res<MapTiles>,
 ) {
     let num_rooms = 8;
     let mut rooms: Vec<Rect> = Vec::new();
+    let floor_handle = asset_server.load("textures/floor_1.png");
 
     while rooms.len() < num_rooms {
         let room = Rect::new(
@@ -122,7 +114,8 @@ pub fn generate_rooms(
             }
         }
         if !overlap {
-            rooms.push(room)
+            println!("room in rooms");
+            rooms.push(room);
         }
     }
 
@@ -133,17 +126,37 @@ pub fn generate_rooms(
             r.max.x as i32,
             r.max.y as i32,
         );
-        for (tile_position, mut tile_type) in tile_map.iter_mut() {
-            for i in room_x1..room_x2 {
-                for j in room_y1..room_y2 {
-                    if tile_position.coords.x == i && tile_position.coords.y == j {
+        println!("{} {} {} {}", room_x1, room_y1, room_x2, room_y2);
+        for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
+            println!("Does this execute?");
+            for i in 0..tile_position.coords.x {
+                for j in 0..tile_position.coords.y {
+                    if j >= room_y1 && j < room_y2 {
+                        println!("Laying floor");
                         tile_type.tile_type = TileType::Floor;
+                        *handle = floor_handle.clone();
                     }
                 }
+                if i >= room_x1 && i < room_x2 {
+                    println!("Laying floor");
+                    tile_type.tile_type = TileType::Floor;
+                    *handle = floor_handle.clone();
+                }
             }
+            /*            for i in room_x1..room_x2 {
+                println!("Outer loop");
+                for j in room_y1..room_y2 {
+                    println!("Inner loop");
+                    if tile_position.coords.x == i || tile_position.coords.y == j {
+                        println!("Floor laying");
+                        tile_type.tile_type = TileType::Floor;
+                        *handle = floor_handle.clone();
+                    }
+                }
+            }*/
         }
     }
-    //    for (mut tile_position,mut tile_type) in tile_map.iter_mut(){
-    //
-    //    }
 }
+//    for (mut tile_position,mut tile_type) in tile_map.iter_mut(){
+//
+//    }
