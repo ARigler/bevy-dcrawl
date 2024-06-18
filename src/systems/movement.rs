@@ -25,20 +25,20 @@ pub fn smovement(
     }
 
     //check that destination tile is walkable
-    for (mut char_CPosition, mut transform, mut player_component) in characters.iter_mut() {
+    for (mut char_cposition, mut transform, mut player_component) in characters.iter_mut() {
         player_component.timer.tick(time.delta());
         if player_component.timer.finished() {
-            for (map_CPosition, map_CTile) in map.iter() {
-                if map_CPosition.coords.x == char_CPosition.coords.x + delta.x
-                    && map_CPosition.coords.y == char_CPosition.coords.y + delta.y
+            for (map_cposition, map_ctile) in map.iter() {
+                if map_cposition.coords.x == char_cposition.coords.x + delta.x
+                    && map_cposition.coords.y == char_cposition.coords.y + delta.y
                 {
-                    match map_CTile.tile_type {
+                    match map_ctile.tile_type {
                         TileType::Floor => {
-                            char_CPosition.coords.x += delta.x;
-                            char_CPosition.coords.y += delta.y;
+                            char_cposition.coords.x += delta.x;
+                            char_cposition.coords.y += delta.y;
                             let normalised_coords = normalise_coordinates(
-                                char_CPosition.coords.x,
-                                char_CPosition.coords.y,
+                                char_cposition.coords.x,
+                                char_cposition.coords.y,
                             );
                             transform.translation =
                                 Vec3::new(normalised_coords.0, normalised_coords.1, 0.1);

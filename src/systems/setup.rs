@@ -3,6 +3,7 @@ use bevy::ecs::component::*;
 use bevy::prelude::*;
 use bevy::utils::*;
 use rand::prelude::*;
+use std::cmp::{max, min};
 
 const TILE_SIZE: Vec2 = Vec2::new(32.0, 32.0);
 const MAP_X: i32 = 80;
@@ -93,23 +94,34 @@ pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub fn generate_rooms(
-    mut tile_map: Query<(&CPosition, &mut CTile, &mut Handle<Image>), Without<CPlayer>>,
+    mut tile_map: Query<(&CPosition, &mut CTile, &mut Handle<Image>), With<CTile>>,
     asset_server: Res<AssetServer>,
 ) {
-    let num_rooms = 8;
-    let mut rooms: Vec<Rect> = Vec::new();
+    let num_rooms = 32;
+    let mut rooms: Vec<IRect> = Vec::new();
     let floor_handle = asset_server.load("textures/floor_1.png");
 
+    let min_room_size = 2;
+    let room_size = 6;
+    let margin = 10;
     while rooms.len() < num_rooms {
-        let room = Rect::new(
-            1. + rand::random::<f32>() * (MAP_X as f32 - 10.),
-            1. + rand::random::<f32>() * (MAP_Y as f32 - 10.),
-            2. + rand::random::<f32>() * (10.),
-            2. + rand::random::<f32>() * (10.),
+        let (room_x1, room_y1) = (
+            1 + rand::thread_rng().gen_range(0..MAP_X - margin),
+            1 + rand::thread_rng().gen_range(0..MAP_Y - margin),
         );
+        let (room_x2, room_y2) = (
+            min_room_size + room_x1 + rand::thread_rng().gen_range(0..room_size),
+            min_room_size + room_y1 + rand::thread_rng().gen_range(0..room_size),
+        );
+        let room = IRect::new(room_x1, room_y1, room_x2, room_y2);
         let mut overlap = false;
         for r in rooms.iter() {
-            if r.contains(room.min) || r.contains(room.max) {
+            if r.contains(room.min)
+                || r.contains(room.max)
+                || r.contains(IVec2::new(room.min.x, room.max.y))
+                || r.contains(IVec2::new(room.min.y, room.max.x))
+                || r.contains(room.center())
+            {
                 overlap = true;
             }
         }
@@ -119,44 +131,65 @@ pub fn generate_rooms(
         }
     }
 
+    let mut rooms_mut: Vec<IRect> = rooms.clone();
     for r in rooms.iter() {
-        let (room_x1, room_y1, room_x2, room_y2) = (
-            r.min.x as i32,
-            r.min.y as i32,
-            r.max.x as i32,
-            r.max.y as i32,
-        );
+        let (room_x1, room_y1, room_x2, room_y2) = (r.min.x, r.min.y, r.max.x, r.max.y);
         println!("{} {} {} {}", room_x1, room_y1, room_x2, room_y2);
+        //build each individual room
         for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
-            println!("Does this execute?");
-            for i in 0..tile_position.coords.x {
-                for j in 0..tile_position.coords.y {
-                    if j >= room_y1 && j < room_y2 {
-                        println!("Laying floor");
+            for i in room_x1..room_x2 {
+                for j in room_y1..room_y2 {
+                    if tile_position.coords.x == i && tile_position.coords.y == j {
                         tile_type.tile_type = TileType::Floor;
                         *handle = floor_handle.clone();
                     }
-                }
-                if i >= room_x1 && i < room_x2 {
-                    println!("Laying floor");
-                    tile_type.tile_type = TileType::Floor;
-                    *handle = floor_handle.clone();
                 }
             }
-            /*            for i in room_x1..room_x2 {
-                println!("Outer loop");
-                for j in room_y1..room_y2 {
-                    println!("Inner loop");
-                    if tile_position.coords.x == i || tile_position.coords.y == j {
-                        println!("Floor laying");
+        }
+    }
+
+    //sort rooms by x coords
+    rooms_mut.sort_by(|a, b| a.center().x.cmp(&b.center().x));
+
+    for (i, r) in rooms_mut.iter().enumerate().skip(1) {
+        let prev = rooms_mut[i - 1].center();
+        let new = r.center();
+        if rand::thread_rng().gen_range(0..2) == 1 {
+            //horizontal tunnels
+            for x in min(prev.x, new.x)..=max(prev.x, new.x) {
+                for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
+                    if tile_position.coords.x == x && tile_position.coords.y == prev.y {
                         tile_type.tile_type = TileType::Floor;
                         *handle = floor_handle.clone();
                     }
                 }
-            }*/
+            }
+            for y in min(prev.y, new.y)..=max(prev.y, new.y) {
+                for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
+                    if tile_position.coords.y == y && tile_position.coords.x == prev.x {
+                        tile_type.tile_type = TileType::Floor;
+                        *handle = floor_handle.clone();
+                    }
+                }
+            }
+            //vertical tunnels
+        } else {
+            for y in min(prev.y, new.y)..=max(prev.y, new.y) {
+                for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
+                    if tile_position.coords.y == y && tile_position.coords.x == prev.x {
+                        tile_type.tile_type = TileType::Floor;
+                        *handle = floor_handle.clone();
+                    }
+                }
+            }
+            for x in min(prev.x, new.x)..=max(prev.x, new.x) {
+                for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
+                    if tile_position.coords.x == x && tile_position.coords.y == prev.y {
+                        tile_type.tile_type = TileType::Floor;
+                        *handle = floor_handle.clone();
+                    }
+                }
+            }
         }
     }
 }
-//    for (mut tile_position,mut tile_type) in tile_map.iter_mut(){
-//
-//    }
