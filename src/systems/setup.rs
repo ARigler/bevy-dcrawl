@@ -6,8 +6,8 @@ use rand::prelude::*;
 use std::cmp::{max, min};
 
 const TILE_SIZE: Vec2 = Vec2::new(32.0, 32.0);
-const MAP_X: i32 = 80;
-const MAP_Y: i32 = 50;
+const MAP_X: i32 = 160;
+const MAP_Y: i32 = 100;
 
 pub fn normalise_coordinates(x: i32, y: i32) -> (f32, f32) {
     return (x as f32 * TILE_SIZE.x, y as f32 * TILE_SIZE.y);
@@ -51,14 +51,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let map_x = 80;
-    let map_y = 50;
-
     let wall_handle: Handle<Image> = asset_server.load("textures/wall_mid.png");
     //spawn map
     let map = commands
         .spawn((
-            CTile_map::new(map_x, map_y),
+            CTile_map::new(MAP_X, MAP_Y),
             TransformBundle {
                 ..Default::default()
             },
@@ -68,8 +65,8 @@ pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .id();
     //set everything to a wall first
-    for i in 0..map_y {
-        for j in 0..map_x {
+    for i in 0..MAP_Y {
+        for j in 0..MAP_X {
             let normal_coords: (f32, f32) = normalise_coordinates(j, i);
             let child_tile = commands
                 .spawn((
@@ -97,7 +94,7 @@ pub fn generate_rooms(
     mut tile_map: Query<(&CPosition, &mut CTile, &mut Handle<Image>), With<CTile>>,
     asset_server: Res<AssetServer>,
 ) {
-    let num_rooms = 32;
+    let num_rooms = 64;
     let mut rooms: Vec<IRect> = Vec::new();
     let floor_handle = asset_server.load("textures/floor_1.png");
 
@@ -126,14 +123,14 @@ pub fn generate_rooms(
             }
         }
         if !overlap {
-            println!("room in rooms");
+            //println!("room in rooms");
             rooms.push(room);
         }
     }
 
     for r in rooms.iter() {
         let (room_x1, room_y1, room_x2, room_y2) = (r.min.x, r.min.y, r.max.x, r.max.y);
-        println!("{} {} {} {}", room_x1, room_y1, room_x2, room_y2);
+        //println!("{} {} {} {}", room_x1, room_y1, room_x2, room_y2);
         //build each individual room
         for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
             for i in room_x1..room_x2 {

@@ -7,23 +7,10 @@ pub fn smovement(
         (With<CPlayer>, Without<CTile>),
     >,
     map: Query<(&CPosition, &CTile)>,
-    input: Res<ButtonInput<KeyCode>>,
+    mut input: ResMut<InputResource>,
     time: Res<Time>,
 ) {
-    let mut delta = IVec2::new(0, 0);
-    if input.pressed(KeyCode::KeyW) {
-        delta.y = 1
-    }
-    if input.pressed(KeyCode::KeyS) {
-        delta.y = -1
-    }
-    if input.pressed(KeyCode::KeyA) {
-        delta.x = -1
-    }
-    if input.pressed(KeyCode::KeyD) {
-        delta.x = 1
-    }
-
+    let delta = input.input;
     //check that destination tile is walkable
     for (mut char_cposition, mut transform, mut player_component) in characters.iter_mut() {
         player_component.timer.tick(time.delta());
@@ -50,4 +37,5 @@ pub fn smovement(
             }
         }
     }
+    input.input = IVec2::new(0, 0);
 }

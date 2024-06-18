@@ -3,10 +3,12 @@ use bevy::prelude::*;
 pub mod bundles;
 pub mod components;
 pub mod plugins;
+pub mod resources;
 pub mod systems;
 
-use components::*;
-use systems::*;
+pub use components::*;
+pub use resources::*;
+pub use systems::*;
 
 fn main() {
     App::new()
@@ -24,7 +26,12 @@ fn main() {
                 }),
         )
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(FixedUpdate, smovement)
+        .insert_resource(InputResource {
+            input: IVec2::new(0, 0),
+        })
+        .add_systems(FixedUpdate, player_input)
+        .add_systems(FixedUpdate, smovement.after(player_input))
+        .add_systems(FixedUpdate, scamera_move.after(smovement))
         .add_systems(Startup, setup_map)
         .add_systems(Startup, generate_rooms.after(setup_map))
         .add_systems(Startup, setup)
