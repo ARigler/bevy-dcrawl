@@ -101,13 +101,13 @@ pub fn generate_rooms(
     let mut rooms: Vec<IRect> = Vec::new();
     let floor_handle = asset_server.load("textures/floor_1.png");
 
-    let min_room_size = 2;
+    let min_room_size = 3;
     let room_size = 6;
     let margin = 10;
     while rooms.len() < num_rooms {
         let (room_x1, room_y1) = (
-            1 + rand::thread_rng().gen_range(0..MAP_X - margin),
-            1 + rand::thread_rng().gen_range(0..MAP_Y - margin),
+            rand::thread_rng().gen_range(0..MAP_X - margin),
+            rand::thread_rng().gen_range(0..MAP_Y - margin),
         );
         let (room_x2, room_y2) = (
             min_room_size + room_x1 + rand::thread_rng().gen_range(0..room_size),
@@ -131,7 +131,6 @@ pub fn generate_rooms(
         }
     }
 
-    let mut rooms_mut: Vec<IRect> = rooms.clone();
     for r in rooms.iter() {
         let (room_x1, room_y1, room_x2, room_y2) = (r.min.x, r.min.y, r.max.x, r.max.y);
         println!("{} {} {} {}", room_x1, room_y1, room_x2, room_y2);
@@ -148,6 +147,7 @@ pub fn generate_rooms(
         }
     }
 
+    let mut rooms_mut: Vec<IRect> = rooms.clone();
     //sort rooms by x coords
     rooms_mut.sort_by(|a, b| a.center().x.cmp(&b.center().x));
 
@@ -166,7 +166,7 @@ pub fn generate_rooms(
             }
             for y in min(prev.y, new.y)..=max(prev.y, new.y) {
                 for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
-                    if tile_position.coords.y == y && tile_position.coords.x == prev.x {
+                    if tile_position.coords.y == y && tile_position.coords.x == new.x {
                         tile_type.tile_type = TileType::Floor;
                         *handle = floor_handle.clone();
                     }
@@ -184,7 +184,7 @@ pub fn generate_rooms(
             }
             for x in min(prev.x, new.x)..=max(prev.x, new.x) {
                 for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
-                    if tile_position.coords.x == x && tile_position.coords.y == prev.y {
+                    if tile_position.coords.x == x && tile_position.coords.y == new.y {
                         tile_type.tile_type = TileType::Floor;
                         *handle = floor_handle.clone();
                     }
