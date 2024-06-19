@@ -13,41 +13,37 @@ pub fn normalise_coordinates(x: i32, y: i32) -> (f32, f32) {
     return (x as f32 * TILE_SIZE.x, y as f32 * TILE_SIZE.y);
 }
 
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let player_texture = asset_server.load("textures/knight_f_idle_anim_f0.png");
-    //spawn player
-    let normal_coords: (f32, f32) = normalise_coordinates(40, 25);
-    let player = commands
-        .spawn((
-            CPlayer {
-                timer: Timer::new(Duration::from_millis(50), TimerMode::Repeating),
-            },
-            CPosition::new(40, 25),
-            SpriteBundle {
-                sprite: Sprite {
-                    custom_size: Some(Vec2::new(16.0, 32.0)),
-                    ..default()
-                },
-                transform: Transform {
-                    translation: Vec3::new(normal_coords.0, normal_coords.1, 0.1),
-                    ..default()
-                },
-                texture: player_texture,
-                ..default()
-            },
-        ))
-        .id();
+pub fn setup(
+    mut commands: Commands,
+    space_query: Query<(&CTile, &CPosition)>,
+    asset_server: Res<AssetServer>,
+) {
+    let mut coord_vec: Vec<IVec2> = Vec::new();
+    while coord_vec.len() < 11 {
+        let (random_x, random_y) = (
+            rand::thread_rng().gen_range(1..MAP_X),
+            rand::thread_rng().gen_range(1..MAP_Y),
+        );
 
-    //spawn 2d camera
-    let camera = commands
-        .spawn(Camera2dBundle {
-            transform: Transform {
-                translation: Vec3::new(normal_coords.0, normal_coords.1, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .id();
+        for (c_tile, c_position) in space_query.iter() {
+            if c_position.coords.x == random_x && c_position.coords.y == random_y {
+                match c_tile.tile_type {
+                    TileType::Floor => {
+                        coord_vec.push(IVec2::new(c_position.coords.x, c_position.coords.y))
+                    }
+                    TileType::Wall => {}
+                }
+            }
+        }
+    }
+
+    let player_position = coord_vec[0];
+    spawn_player(&mut commands, &asset_server, player_position);
+    spawn_camera(&mut commands, player_position);
+    for i in 0..10 {
+        spawn_monster(&mut commands, &asset_server, coord_vec[i + 1]);
+    }
+    commands.insert_resource(TurnState::AwaitingInput);
 }
 
 pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {

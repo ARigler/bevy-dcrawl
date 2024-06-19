@@ -34,6 +34,8 @@ fn main() {
         .add_systems(FixedUpdate, scamera_move.after(smovement))
         .add_systems(Startup, setup_map)
         .add_systems(Startup, generate_rooms.after(setup_map))
-        .add_systems(Startup, setup)
+        .add_systems(Startup, setup.after(generate_rooms))
+        .add_systems(FixedUpdate, scollisions.after(smovement))
+        .add_systems(Update, send_turn)
         .run()
 }
