@@ -43,7 +43,7 @@ pub fn setup(
     for i in 0..10 {
         spawn_monster(&mut commands, &asset_server, coord_vec[i + 1]);
     }
-    commands.insert_resource(TurnState::AwaitingInput);
+    commands.insert_resource(TurnState::PlayerTurn);
 }
 
 pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {

@@ -2,11 +2,13 @@ use bevy::prelude::*;
 
 pub mod bundles;
 pub mod components;
+pub mod events;
 pub mod plugins;
 pub mod resources;
 pub mod systems;
 
 pub use components::*;
+pub use events::*;
 pub use resources::*;
 pub use systems::*;
 
@@ -29,7 +31,12 @@ fn main() {
         .insert_resource(InputResource {
             input: IVec2::new(0, 0),
         })
+        .insert_resource(PlayerActed { acted: false })
+        .insert_resource(MonstersActed { acted: false })
+        .add_event::<MoveIntent>()
+        .add_event::<EndTurnEvent>()
         .add_systems(FixedUpdate, player_input)
+        .add_systems(FixedUpdate, monster_input.after(player_input))
         .add_systems(FixedUpdate, smovement.after(player_input))
         .add_systems(FixedUpdate, scamera_move.after(smovement))
         .add_systems(Startup, setup_map)
