@@ -55,7 +55,7 @@ pub fn setup(
     let player_position = coord_vec[0];
     spawn_player(&mut commands, &creature_handles, player_position);
     spawn_camera(&mut commands, player_position);
-    for i in 0..1 {
+    for i in 0..10 {
         spawn_monster(&mut commands, &creature_handles, coord_vec[i + 1]);
     }
     spawn_health_hud(&mut commands, &asset_server, 20, 20);
