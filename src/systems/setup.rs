@@ -13,9 +13,24 @@ pub fn normalise_coordinates(x: i32, y: i32) -> (f32, f32) {
     return (x as f32 * TILE_SIZE.x, y as f32 * TILE_SIZE.y);
 }
 
+pub fn populate_resources(
+    asset_server: Res<AssetServer>,
+    mut tile_handles: ResMut<RTiles>,
+    mut creature_handles: ResMut<RCreatures>,
+) {
+    tile_handles.wall_handle = asset_server.load("textures/wall_mid.png");
+    tile_handles.floor_handle = asset_server.load("textures/floor_1.png");
+
+    creature_handles.player_handle = asset_server.load("textures/knight_f_idle_anim_f0.png");
+    creature_handles.orc_handle = asset_server.load("textures/orc_warrior_idle_anim_f0.png");
+    creature_handles.goblin_handle = asset_server.load("textures/goblin_idle_anim_f0.png");
+    creature_handles.ogre_handle = asset_server.load("textures/ogre_idle_anim_f0.png");
+}
+
 pub fn setup(
     mut commands: Commands,
     space_query: Query<(&CTile, &CPosition)>,
+    creature_handles: Res<RCreatures>,
     asset_server: Res<AssetServer>,
 ) {
     let mut coord_vec: Vec<IVec2> = Vec::new();
@@ -38,16 +53,18 @@ pub fn setup(
     }
 
     let player_position = coord_vec[0];
-    spawn_player(&mut commands, &asset_server, player_position);
+    spawn_player(&mut commands, &creature_handles, player_position);
     spawn_camera(&mut commands, player_position);
-    for i in 0..10 {
-        spawn_monster(&mut commands, &asset_server, coord_vec[i + 1]);
+    for i in 0..1 {
+        spawn_monster(&mut commands, &creature_handles, coord_vec[i + 1]);
     }
+    spawn_health_hud(&mut commands, &asset_server, 20, 20);
+    init_tooltips(&mut commands, &asset_server);
     commands.insert_resource(TurnState::PlayerTurn);
 }
 
-pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let wall_handle: Handle<Image> = asset_server.load("textures/wall_mid.png");
+pub fn setup_map(mut commands: Commands, tile_handles: Res<RTiles>) {
+    let wall_handle: Handle<Image> = tile_handles.wall_handle.clone();
     //spawn map
     let map = commands
         .spawn((
@@ -88,11 +105,10 @@ pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 pub fn generate_rooms(
     mut tile_map: Query<(&CPosition, &mut CTile, &mut Handle<Image>), With<CTile>>,
-    asset_server: Res<AssetServer>,
+    tile_handles: Res<RTiles>,
 ) {
     let num_rooms = 64;
     let mut rooms: Vec<IRect> = Vec::new();
-    let floor_handle = asset_server.load("textures/floor_1.png");
 
     let min_room_size = 3;
     let room_size = 6;
@@ -133,7 +149,7 @@ pub fn generate_rooms(
                 for j in room_y1..room_y2 {
                     if tile_position.coords.x == i && tile_position.coords.y == j {
                         tile_type.tile_type = TileType::Floor;
-                        *handle = floor_handle.clone();
+                        *handle = tile_handles.floor_handle.clone();
                     }
                 }
             }
@@ -153,7 +169,7 @@ pub fn generate_rooms(
                 for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
                     if tile_position.coords.x == x && tile_position.coords.y == prev.y {
                         tile_type.tile_type = TileType::Floor;
-                        *handle = floor_handle.clone();
+                        *handle = tile_handles.floor_handle.clone();
                     }
                 }
             }
@@ -161,7 +177,7 @@ pub fn generate_rooms(
                 for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
                     if tile_position.coords.y == y && tile_position.coords.x == new.x {
                         tile_type.tile_type = TileType::Floor;
-                        *handle = floor_handle.clone();
+                        *handle = tile_handles.floor_handle.clone();
                     }
                 }
             }
@@ -171,7 +187,7 @@ pub fn generate_rooms(
                 for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
                     if tile_position.coords.y == y && tile_position.coords.x == prev.x {
                         tile_type.tile_type = TileType::Floor;
-                        *handle = floor_handle.clone();
+                        *handle = tile_handles.floor_handle.clone();
                     }
                 }
             }
@@ -179,10 +195,28 @@ pub fn generate_rooms(
                 for (tile_position, mut tile_type, mut handle) in tile_map.iter_mut() {
                     if tile_position.coords.x == x && tile_position.coords.y == new.y {
                         tile_type.tile_type = TileType::Floor;
-                        *handle = floor_handle.clone();
+                        *handle = tile_handles.floor_handle.clone();
                     }
                 }
             }
         }
     }
+}
+
+pub fn init_tooltips(commands: &mut Commands, asset_server: &Res<AssetServer>) {
+    let mut tooltip_text = commands.spawn((
+        TextBundle::from_section(
+            "Tooltip text",
+            TextStyle {
+                font: asset_server.load("fonts/FiraSans-Light.ttf"),
+                font_size: 20.0,
+                ..default()
+            },
+        )
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            ..default()
+        }),
+        CTooltipText,
+    ));
 }

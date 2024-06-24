@@ -57,7 +57,6 @@ pub fn smovement(
                 }
             }
             input.input = IVec2::new(0, 0);
-            ev_endturn.send(EndTurnEvent);
         }
         TurnState::MonsterTurn => {
             let mut monster_delta: IVec2 = IVec2::new(0, 0);
@@ -93,7 +92,6 @@ pub fn smovement(
                     }
                 }
             }
-            ev_endturn.send(EndTurnEvent);
         }
     }
 }
