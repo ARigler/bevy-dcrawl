@@ -48,6 +48,6 @@ fn main() {
         .add_systems(FixedUpdate, scollisions.after(smovement))
         .add_systems(Update, send_turn)
         .add_systems(Update, health_ui_update)
-        .add_systems(Update, tooltips)
+        .add_systems(FixedUpdate, tooltips.after(scollisions))
         .run()
 }

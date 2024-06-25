@@ -17,19 +17,27 @@ pub fn tooltips(
         let camera = q_camera.single();
         let (position_rel_x, position_rel_y) =
             (position.x - (width / 2.0), position.y - (height / 2.0));
+        let (offset_x, offset_y) = (
+            camera.translation.x - (width / 2.0),
+            camera.translation.y - (height / 2.0),
+        );
         let (mut ttext, mut tposition, mut tstyle) = q_tooltip_text.single_mut();
         for (ent, trans, name) in q_positions.iter() {
-            println!(
-                "{:?}, {:?}, {:?}, {:?},{:?}",
-                trans.translation, camera.translation, position, position_rel_x, position_rel_y
+            let (startpos_x, endpos_x, startpos_y, endpos_y) = (
+                (trans.translation.x - offset_x) - 16.0,
+                (trans.translation.x - offset_x) + 16.0,
+                (trans.translation.y - offset_y
+                    + 2.0 * (camera.translation.y - trans.translation.y))
+                    - 16.0,
+                (trans.translation.y - offset_y
+                    + 2.0 * (camera.translation.y - trans.translation.y))
+                    + 16.0,
             );
-            if (camera.translation.x - trans.translation.x) <= position_rel_x
-                && position_rel_x <= (camera.translation.x - trans.translation.x)
-                && (camera.translation.y - trans.translation.y) <= position_rel_y
-                && position_rel_y <= (camera.translation.y - trans.translation.y)
+            if (startpos_x <= position.x && position.x <= endpos_x)
+                && (startpos_y <= position.y && position.y <= endpos_y)
             {
-                tposition.translation.x = trans.translation.x + position_rel_x;
-                tposition.translation.y = trans.translation.y + position_rel_y;
+                //tposition.translation.x = trans.translation.x + position_rel_x;
+                //tposition.translation.y = trans.translation.y + position_rel_y;
                 *ttext = Text::from_section(
                     &name.value,
                     TextStyle {
