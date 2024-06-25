@@ -32,6 +32,7 @@ pub fn setup(
     space_query: Query<(&CTile, &CPosition)>,
     creature_handles: Res<RCreatures>,
     asset_server: Res<AssetServer>,
+    mut tooltip_hidden: ResMut<RTooltipHidden>,
 ) {
     let mut coord_vec: Vec<IVec2> = Vec::new();
     while coord_vec.len() < 11 {
@@ -61,6 +62,7 @@ pub fn setup(
     spawn_health_hud(&mut commands, &asset_server, 20, 20);
     init_tooltips(&mut commands, &asset_server);
     commands.insert_resource(TurnState::PlayerTurn);
+    tooltip_hidden.value = true;
 }
 
 pub fn setup_map(mut commands: Commands, tile_handles: Res<RTiles>) {

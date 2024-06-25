@@ -1,6 +1,6 @@
 use crate::*;
 use bevy::prelude::*;
-
+/*
 pub fn scollisions(
     mut commands: Commands,
     player_entity: Query<&CPosition, With<CPlayer>>,
@@ -14,3 +14,4 @@ pub fn scollisions(
         }
     }
 }
+*/

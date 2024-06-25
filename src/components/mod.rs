@@ -9,6 +9,7 @@ pub mod tile;
 pub mod tile_map;
 pub mod tooltip_text;
 pub mod turnstate;
+pub mod wants_to_attack;
 
 pub use collisionbox::*;
 pub use enemy::*;
@@ -21,3 +22,4 @@ pub use tile::*;
 pub use tile_map::*;
 pub use tooltip_text::*;
 pub use turnstate::*;
+pub use wants_to_attack::*;

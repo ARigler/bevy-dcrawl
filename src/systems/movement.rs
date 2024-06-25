@@ -17,6 +17,7 @@ pub fn smovement(
     turn: Res<TurnState>,
     mut ev_intent: EventReader<MoveIntent>,
     mut ev_endturn: EventWriter<EndTurnEvent>,
+    mut commands: Commands,
 ) {
     match *turn {
         TurnState::PlayerTurn => {
@@ -40,14 +41,38 @@ pub fn smovement(
                         {
                             match map_ctile.tile_type {
                                 TileType::Floor => {
-                                    char_cposition.coords.x += player_delta.x;
-                                    char_cposition.coords.y += player_delta.y;
-                                    let normalised_coords = normalise_coordinates(
-                                        char_cposition.coords.x,
-                                        char_cposition.coords.y,
-                                    );
-                                    transform.translation =
-                                        Vec3::new(normalised_coords.0, normalised_coords.1, 0.1);
+                                    let mut attacking = false;
+                                    for (
+                                        monster_entity,
+                                        monster_position,
+                                        transform_monster,
+                                        enemy_component,
+                                    ) in monsters.iter()
+                                    {
+                                        if monster_position.coords.x
+                                            == char_cposition.coords.x + player_delta.x
+                                            && monster_position.coords.y
+                                                == char_cposition.coords.y + player_delta.y
+                                        {
+                                            commands.spawn(WantsToAttack {
+                                                attacker: char_entity,
+                                                victim: monster_entity,
+                                            });
+                                        }
+                                    }
+                                    if !attacking {
+                                        char_cposition.coords.x += player_delta.x;
+                                        char_cposition.coords.y += player_delta.y;
+                                        let normalised_coords = normalise_coordinates(
+                                            char_cposition.coords.x,
+                                            char_cposition.coords.y,
+                                        );
+                                        transform.translation = Vec3::new(
+                                            normalised_coords.0,
+                                            normalised_coords.1,
+                                            0.1,
+                                        );
+                                    }
                                     break;
                                 }
                                 _ => {}
